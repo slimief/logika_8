@@ -1,0 +1,161 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <iostream>
+#include <string.h>
+#include <locale.h>
+
+#define G 5  // Размер графа
+
+typedef struct Node {
+    int priority; // Приоритет элемента
+    int data; // Данные элемента
+    struct Node* next; // Указатель на следующий элемент
+} Node;
+
+typedef struct PriorityQueue {
+    Node* head; // Указатель на голову списка
+} PriorityQueue;
+
+// Функция создания новой приоритетной очереди
+PriorityQueue* create_queue() {
+    PriorityQueue* pq = (PriorityQueue*)malloc(sizeof(PriorityQueue));
+    pq->head = NULL; // инициализация головы как пустой
+    return pq;
+}
+
+// Функция добавления элемента в приоритетную очередь
+void enqueue(PriorityQueue* pq, int data, int priority) {
+    Node* new_node = (Node*)malloc(sizeof(Node));
+    new_node->priority = priority; // установка приоритета нового узла
+    new_node->data = data;
+    new_node->next = NULL;
+
+    // Если очередь пуста либо приоритет нового элемента выше приоритета головы
+    if (pq->head == NULL || pq->head->priority < priority) {
+        new_node->next = pq->head; // новый узел указ на голову
+        pq->head = new_node; // новый узел станов головой
+    }
+    else {
+        // Ищем место для вставки нового элемента
+        Node* current = pq->head;
+        while (current->next != NULL && current->next->priority >= priority) {
+            current = current->next; //переход к следующему
+        }
+        new_node->next = current->next;
+        current->next = new_node;
+    }
+}
+
+// Функция извлечения элемента с наивысшим приоритетом
+int dequeue(PriorityQueue* pq) {
+    if (pq->head == NULL) {
+        return -1; // Очередь пуста
+    }
+    Node* temp = pq->head;
+    int data = temp->data;
+    pq->head = pq->head->next;
+    free(temp); // Освобождаем память для узла
+    return data; // Возвращаем данные
+}
+
+// Функция для просмотра очереди
+void review_queue(PriorityQueue* pq) {
+    Node* current = pq->head;
+    if (current == NULL) {
+        printf("Очередь пуста\n");
+        return;
+    }
+
+    printf("Содержимое очереди:\n");
+    while (current != NULL) {
+        printf("Данные - %d, Приоритет - %d\n", current->data, current->priority);
+        current = current->next;
+    }
+}
+
+// Функция проверки, пуста ли очередь
+bool is_empty(PriorityQueue* pq) {
+    return pq->head == NULL;
+}
+
+// Функция освобождения памяти очереди
+void free_queue(PriorityQueue* pq) {
+    Node* current = pq->head;
+    Node* next_node;
+    while (current != NULL) {
+        next_node = current->next;
+        free(current);
+        current = next_node;
+    }
+    free(pq);
+}
+
+// Обход в ширину графа, представленного матрицей смежности, с использованием очереди, построенной на основе структуры данных «список»
+void bfs(int M[G][G], int start) {
+    bool visited[G]; // массив для отслеживания посещенных узлов
+    for (int i = 0; i < G; i++) {
+        visited[i] = false; // инициализация всех как непосещенных
+    }
+
+    PriorityQueue* pq = create_queue(); // создание приоритетной очереди
+    visited[start] = true; // стартовый узел посещен
+    enqueue(pq, start, 0); // передача стартового в очередь
+
+    while (!is_empty(pq)) {
+        int current = dequeue(pq); // извлекаем узел с наивысшим приоритетом
+        printf("%d ", current);
+
+        for (int i = 0; i < G; i++) { // проход по всем возможным соседям
+            if (M[current][i] == 1 && !visited[i]) { // если есть связь и узел непосещен
+                visited[i] = true;
+                enqueue(pq, i, 0); 
+            }
+        }
+    }
+
+    free_queue(pq);
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    srand(time(NULL));
+
+    int M[G][G]; // Матрица смежности
+
+    // Инициализация матрицы смежности
+    for (int i = 0; i < G; i++) {
+        for (int j = 0; j < G; j++) {
+            if (i == j) {
+                M[i][j] = 0; // Нет петли
+            }
+            else {
+                M[i][j] = 0; // Изначально нет ребер
+            }
+        }
+    }
+
+    // Генерация случайных рёбер для неориентированного графа
+    for (int i = 0; i < G; i++) {
+        for (int j = i + 1; j < G; j++) {
+            M[i][j] = M[j][i] = rand() % 2; // Случайное ребро между i и j
+        }
+    }
+
+    // Вывод матрицы смежности на экран
+    printf("Матрица смежности:\n");
+    for (int i = 0; i < G; i++) {
+        for (int j = 0; j < G; j++) {
+            printf("%d ", M[i][j]);
+        }
+        printf("\n");
+    }
+
+    // Обход в ширину, начиная с вершины 0
+    printf("Обход в ширину: ");
+    bfs(M, 0);
+    printf("\n");
+
+    return 0;
+}
