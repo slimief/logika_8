@@ -1,0 +1,86 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <iostream>
+#include <string.h>
+#include <locale.h>
+
+
+void bfs(int start, int G, int** M) {
+bool* visited = (bool*)malloc(G * sizeof(bool));
+int* q = (int*)malloc(G * sizeof(int));
+int front = 0, rear = 0;
+for (int i = 0; i < G; i++) {
+visited[i] = false;
+}
+visited[start] = true;
+q[rear++] = start;
+
+while (front != rear) {
+int current = q[front++];
+printf("%d ", current);
+
+for (int i = 0; i < G; i++) {
+if (M[current][i] == 1 && !visited[i]) { // если есть ребро и вершина не посещена
+visited[i] = true;
+q[rear++] = i;
+}
+}
+}
+free(visited);
+free(q);
+}
+
+int main() {
+setlocale(LC_ALL, "Russian");
+srand(time(NULL));
+
+int G;
+int start;
+printf("Введите размер: ");
+scanf("%d", &G);
+int** M = (int**)malloc(G * sizeof(int*));
+for (int i = 0; i < G; i++) {
+M[i] = (int*)malloc(G * sizeof(int));
+}
+// Инициализация матрицы смежности
+for (int i = 0; i < G; i++) {
+for (int j = 0; j < G; j++) {
+if (i == j) {
+M[i][j] = 0; // Нет петли
+}
+else {
+M[i][j] = 0; // Изначально нет ребер
+}
+}
+}
+
+// Генерация случайных рёбер для неориентированного графа
+for (int i = 0; i < G; i++) {
+for (int j = i + 1; j < G; j++) {
+M[i][j] = M[j][i] = rand() % 2; // Случайное ребро между i и j
+}
+}
+// Вывод матрицы смежности на экран
+printf("Матрица смежности:\n");
+for (int i = 0; i < G; i++) {
+for (int j = 0; j < G; j++) {
+printf("%d ", M[i][j]);
+}
+printf("\n");
+}
+
+printf("\nВведите стартовую вершину: ");
+scanf("%d", &start);
+
+// Обход в ширину, начиная с вершины 0
+printf("Обход в ширину: ");
+bfs(start, G, M);
+printf("\n");
+for (int i = 0; i < G; i++) {
+free(M[i]);
+}
+free(M);
+return 0;
+}
